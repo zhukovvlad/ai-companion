@@ -41,12 +41,12 @@ export class MemoryManager {
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY }),
       { pineconeIndex }
-    );
+    ); 
 
     const similarDocs = await vectorStore
       .similaritySearch(recentChatHistory, 3, { fileName: companionFileName })
       .catch((err) => {
-        console.log("Failed to get vector search results", err);
+        console.log("WARNING: failed to get vector search results.", err);
       });
 
     return similarDocs;
@@ -82,7 +82,7 @@ export class MemoryManager {
 
   public async readLatestHistory(companionKey: CompanionKey): Promise<string> {
     if (!companionKey || typeof companionKey.userId == "undefined") {
-      console.log("Companion Key set incorrectly");
+      console.log("Companion key set incorrectly");
       return "";
     }
 
@@ -94,5 +94,26 @@ export class MemoryManager {
     result = result.slice(-30).reverse();
     const recentChats = result.reverse().join("\n");
     return recentChats;
+  }
+
+  public async seedChatHistory(
+    seedContent: String,
+    delimiter: string = "\n",
+    companionKey: CompanionKey
+  ) {
+    const key = this.generateRedisCompanionKey(companionKey);
+
+    if (await this.history.exists(key)) {
+      console.log("User already has chat history");
+      return;
+    }
+
+    const content = seedContent.split(delimiter);
+    let counter = 0;
+
+    for (const line of content) {
+      await this.history.zadd(key, { score: counter, member: line });
+      counter += 1;
+    }
   }
 }
