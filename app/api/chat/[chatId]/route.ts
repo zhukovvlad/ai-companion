@@ -13,11 +13,11 @@ export async function POST(
   { params }: { params: { chatId: string } }
 ) {
   try {
-    const prompt = await request.json();
+    const { prompt } = await request.json();
     const user = await currentUser();
 
     if (!user || !user.firstName || !user.id) {
-      return new NextResponse("Unaouthorized", { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const identifier = request.url + "-" + user.id;
@@ -50,7 +50,7 @@ export async function POST(
     const companion_file_name = name + ".txt";
 
     const companionKey = {
-      companionName: name,
+      companionName: name!,
       userId: user.id,
       modelName: "llama2-13b",
     };
@@ -84,7 +84,7 @@ export async function POST(
 
     const model = new Replicate({
       model:
-        "a16z-infra/llama-2-13b-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+        "a16z-infra/llama-2-13b-chat:2a7f981751ec7fdf87b5b91ad4db53683a98082e9ff7bfd12c8cd5ea85980a52",
       input: {
         max_length: 2048,
       },
@@ -123,7 +123,7 @@ export async function POST(
     s.push(null);
 
     if (response !== undefined && response.length > 1) {
-      memoryManager.writeToHistory("" + response.trim, companionKey);
+      memoryManager.writeToHistory("" + response.trim(), companionKey);
 
       await prismadb.companion.update({
         where: {
@@ -141,8 +141,7 @@ export async function POST(
       });
     }
 
-	return new StreamingTextResponse(s)
-
+    return new StreamingTextResponse(s);
   } catch (error) {
     console.log("[CHAT POST]", error);
     return new NextResponse("Internal error", { status: 500 });
