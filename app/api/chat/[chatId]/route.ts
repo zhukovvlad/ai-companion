@@ -147,3 +147,46 @@ export async function POST(
     return new NextResponse("Internal error", { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { chatId: string } }
+) {
+  try {
+    const user = await currentUser();
+
+    if (!user || !user.firstName || !user.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const companionKey = {
+      companionName: params.chatId,
+      userId: user.id,
+      modelName: "llama2-13b",
+    };
+
+    const memoryManager = await MemoryManager.getInstance();
+
+    await memoryManager.clearChatHistory(companionKey);
+
+    await prismadb.companion.update({
+      where: {
+        id: params.chatId,
+      },
+      data: {
+        messages: {
+          deleteMany: {
+            userId: user.id,
+          },
+        },
+      },
+    });
+
+    return new NextResponse("Chat history successfully cleared", {
+      status: 200,
+    });
+  } catch (error) {
+    console.log("[CHAT DELETE]", error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}

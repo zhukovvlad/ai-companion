@@ -116,4 +116,15 @@ export class MemoryManager {
       counter += 1;
     }
   }
+
+  public async clearChatHistory(companionKey: CompanionKey) {
+    if (!companionKey || typeof companionKey.userId == "undefined") {
+      console.log("Companion key set incorrectly");
+      return "";
+    }
+
+    const key = this.generateRedisCompanionKey(companionKey)
+
+    await this.history.del(key)
+  }
 }
