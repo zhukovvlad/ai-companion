@@ -5,6 +5,7 @@ import { Companion, Message } from "@prisma/client";
 import {
   ChevronLeft,
   Edit,
+  Eraser,
   MessageSquare,
   MoreVertical,
   Trash,
@@ -29,9 +30,10 @@ interface ChatHeaderProps {
       messages: number;
     };
   };
+  clearChatHistory: () => void;
 }
 
-export const ChatHeader = ({ companion }: ChatHeaderProps) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ companion, clearChatHistory }) => {
   const router = useRouter();
   const { user } = useUser();
   const { toast } = useToast();
@@ -58,12 +60,13 @@ export const ChatHeader = ({ companion }: ChatHeaderProps) => {
     try {
       // Здесь можно добавить ваш API-запрос для очистки истории чата
       await axios.delete(`/api/chat/${companion.id}`);
+	  clearChatHistory();
 
       toast({
         description: "Chat history cleared successfully",
       });
 
-      router.refresh(); // Обновите чат, чтобы отобразить изменения
+    router.refresh(); // Обновите чат, чтобы отобразить изменения
     } catch (error) {
       console.log(error);
       toast({
@@ -112,7 +115,7 @@ export const ChatHeader = ({ companion }: ChatHeaderProps) => {
               className="hover:cursor-pointer"
               onClick={onClearChatHistory}
             >
-              <Trash className="h-4 w-4 mr-2" />
+              <Eraser className="h-4 w-4 mr-2" />
               Clear Chat
             </DropdownMenuItem>
             <DropdownMenuItem

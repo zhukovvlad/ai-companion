@@ -52,9 +52,13 @@ export const ChatClient = ({ companion }: ChatClientProps) => {
     handleSubmit(e);
   };
 
+  const handleClearChatHistory = () => {
+    setMessages([]); // Очищает локальное состояние сообщений
+  };
+
   return (
     <div className="flex flex-col h-full p-4 space-y-2">
-      <ChatHeader companion={companion} />
+      <ChatHeader companion={companion} clearChatHistory={handleClearChatHistory} />
       <ChatMessages
         companion={companion}
         isLoading={isLoading}
